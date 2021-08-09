@@ -27,6 +27,11 @@ class InvalidFileError(OSError):
     """An error caused when attempting to read or write to a file that isn't a file (e.g., a directory)."""
     pass
 
+def delete_folder(uuid):
+    """Deletes folder path defined by SHORT_PATH + :uuid:"""
+    try: shutil.rmtree(SHORT_PATH+uuid)
+    except: pass
+
 def setup_client_from_file(dafilename):
     """Creates a DeviantArt API connection from a text file.
     Must be built as (ID=[client_id]\\nSECRET=[client_secret])"""
@@ -114,6 +119,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
                 shutil.copyfileobj(myswf.raw, dump_it)
         except:
             print('"' + deviationurl + '"\'s file failed to be downloaded.')
+            delete_folder(uuid)
             return
 
         # Find release date and description
@@ -148,7 +154,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
 
         # Create YAML
         try: 
-            with open(SHORT_PATH + uuid + '/meta.yaml', 'w') as yaml:
+            with open(SHORT_PATH + uuid + '/meta.yaml', 'w', encoding='utf-8') as yaml:
                 content = """Title: "{}"
 Alternate Titles: null
 Library: arcade
@@ -165,7 +171,7 @@ Source: {}
 Platform: Flash
 Status: Playable
 Application Path: FPSoftware\\Flash\\flashplayer_32_sa.exe
-Launch Command: http://{}
+Launch Command: {}
 Game Notes: null
 Original Description: |-\n  {}
 Curation Notes: null
@@ -174,9 +180,11 @@ Additional Applications: {{}} """.format(metadata['title'].replace('"', '\"'), s
                 yaml.write(content)
         except:
             print(source_url + ': Error creating metadata file.')
+            delete_folder(uuid)
             return
 
         # All done!
+        print(source_url + ': Success')
         return uuid
 
     else:
@@ -238,7 +246,7 @@ def return_msg(value):
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.0 --- 2021-08-07')
+    print('fpdeviant by prostagma-fp --- version 1.1.1 --- 2021-08-07')
     print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':

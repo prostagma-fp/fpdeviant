@@ -170,7 +170,7 @@ Game Notes: null
 Original Description: |-\n  {}
 Curation Notes: null
 Mount Parameters: null
-Additional Applications: {{}} """.format(metadata['title'].replace('"', '\"'), str(metadata['author']).replace('"', '\"'), releaseDate, source_url, 'http://api-da.wixmp.com/_api/download/'+swfurl['filename'], metadata['description'])
+Additional Applications: {{}} """.format(metadata['title'].replace('"', '\"'), str(metadata['author']).replace('"', '\"'), releaseDate, source_url, 'http://api-da.wixmp.com/_api/download/'+swfurl['filename'], originalDescription)
                 yaml.write(content)
         except:
             print(deviationurl + ': Error creating metadata file.')

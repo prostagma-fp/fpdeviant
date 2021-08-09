@@ -173,14 +173,14 @@ Mount Parameters: null
 Additional Applications: {{}} """.format(metadata['title'].replace('"', '\"'), str(metadata['author']).replace('"', '\"'), releaseDate, source_url, 'http://api-da.wixmp.com/_api/download/'+swfurl['filename'], originalDescription)
                 yaml.write(content)
         except:
-            print(deviationurl + ': Error creating metadata file.')
+            print(source_url + ': Error creating metadata file.')
             return
 
         # All done!
         return uuid
 
     else:
-        print(deviationurl + ' is not a Flash deviation.')
+        print(source_url + ' is not a Flash deviation.')
         return
 
 def get_collection_id(collectionurl):

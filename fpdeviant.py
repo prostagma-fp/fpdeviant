@@ -75,7 +75,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
             print('"' + deviationurl + '" is not a valid deviation.')
             return
     else:
-        uuid = deviationdata.url
+        uuid = deviationdata.deviationid
     
     #if not 'html_content' in locals():
 
@@ -86,7 +86,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
     try:
         swfurl = DA_CLIENT.download_deviation(uuid)
     except:
-        print(source_url + ': Deviation is not downloadable.')
+        print(source_url + ': Deviation is not downloadable. UUID '+ uuid)
         return
 
     # Get deviation meta, devationdata does not have desc
@@ -120,7 +120,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
         if not deviationdata:
             date_index = html_content.find(' dateTime="')+11
             releaseDate = html_content[date_index:date_index+10]
-        else: releaseDate = strftime("%Y-%m-%d", gmtime(deviationdata.publishd_time))
+        else: releaseDate = strftime("%Y-%m-%d", gmtime(int(deviationdata.published_time)))
 
         originalDescription = metadata['description']
         replacements = [
@@ -144,7 +144,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
                     myimg = requests.get(logo_link, stream=True)
                     f_image.write(myimg.content)
             except: pass
-        else: logo_link = deviationdata.preview.src
+        else: logo_link = deviationdata.preview['src']
 
         # Create YAML
         try: 
@@ -183,6 +183,17 @@ Additional Applications: {{}} """.format(metadata['title'].replace('"', '\"'), s
         print(deviationurl + ' is not a Flash deviation.')
         return
 
+def get_collection_id(collectionurl):
+    try: html_content = requests.get(collectionurl).text
+    except:
+        print(collectionurl + ': collection could not be fetched.')
+        return
+    try:
+        return re.search(r'DeviantArt:\/\/collection\/[\w-].+\/([\w-].+)"', html_content).group(1)
+    except:
+        print(collectionurl + ': failed to get collection ID.')
+        return
+
 def check_da_url(devianturl):
 
     """Tries to create a curation if the url is a deviation or multiple if the url is a gallery or username link. Scraps can only be fetched individually.
@@ -200,8 +211,18 @@ def check_da_url(devianturl):
             offset += 24
             if gallery['has_more'] == False: offset = -1
         print('Note: scraps can only be fetched individually.')
-    else:
-        if(get_da_curation(devianturl)):
+    elif re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)\/favourites\/(\d+?)\/([\w-]+?)$', devianturl):
+        id = get_collection_id(devianturl)
+        offset = 0
+        while offset != -1:
+            collection = DA_CLIENT.get_collection(id, re.search(r'https?:..www.deviantart.com\/(.+?)\/', devianturl).group(1), offset=offset, limit=24)
+            for deviation in collection['results']:
+                if(get_da_curation(deviationdata=deviation)):
+                    curationcounter += 1
+            offset += 24
+            if collection['has_more'] == False: offset = -1
+    else: #Regular submission link
+        if get_da_curation(devianturl):
             curationcounter += 1
 
     return curationcounter
@@ -218,7 +239,7 @@ def return_msg(value):
 
 def looping_menu():
     print('fpdeviant by prostagma-fp --- version 1.0 --- 2021-08-07')
-    print('Supports deviation and user URLs')
+    print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':
         if value.startswith('http'):

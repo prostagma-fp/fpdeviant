@@ -246,7 +246,7 @@ def return_msg(value):
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.1.1 --- 2021-08-07')
+    print('fpdeviant by prostagma-fp --- version 1.1.1 --- 2021-08-09')
     print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':

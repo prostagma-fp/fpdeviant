@@ -143,14 +143,14 @@ def get_da_curation(deviationurl=None, deviationdata=None):
         originalDescription = unescape(originalDescription).strip('\n').strip().replace('\n', '\n  ')
         
         # Grab logo
-        if not deviationdata:
-            logo_link = re.search(r'(?<=rel=\"preload\" href=\")https:..images-wixmp(.+?)(?=\")', html_content).group(0)
-            try:
-                with open(SHORT_PATH + uuid + '/logo.png', 'wb') as f_image:
-                    myimg = requests.get(logo_link, stream=True)
-                    f_image.write(myimg.content)
-            except: pass
-        else: logo_link = deviationdata.preview['src']
+        try:
+            if not deviationdata: logo_link = re.search(r'(?<=rel=\"preload\" href=\")https:..images-wixmp(.+?)(?=\")', html_content).group(0)
+            else: logo_link = deviationdata.preview['src']       
+            
+            with open(SHORT_PATH + uuid + '/logo.png', 'wb') as f_image:
+                myimg = requests.get(logo_link, stream=True)
+                f_image.write(myimg.content)
+        except: pass
 
         # Create YAML
         try: 
@@ -246,7 +246,7 @@ def return_msg(value):
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.1.1 --- 2021-08-09')
+    print('fpdeviant by prostagma-fp --- version 1.1.2 --- 2021-08-13')
     print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':

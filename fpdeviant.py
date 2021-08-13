@@ -91,7 +91,7 @@ def get_da_curation(deviationurl=None, deviationdata=None):
     try:
         swfurl = DA_CLIENT.download_deviation(uuid)
     except:
-        print(source_url + ': Deviation is not downloadable. UUID '+ uuid)
+        print(source_url + ': Work is not downloadable. UUID '+ uuid)
         return
 
     # Get deviation meta, devationdata does not have desc
@@ -209,19 +209,27 @@ def check_da_url(devianturl):
     :param deviationurl: The deviation link you want to curate from.
     """
     curationcounter = 0
-    if re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)($|\/)(gallery\/?)?', devianturl):
-        offset = 0
+    offset = 0
+    if re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)($|\/)(gallery(\/.*)?)?', devianturl):
+        folder_id = ''
+        if re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)\/gallery\/[\dA-Z].*', devianturl): # Specific gallery
+            try:
+                html_content = requests.get(devianturl).text
+                folder_id = re.search(r'DeviantArt:\/\/gallery\/[\w-].+\/([\dA-Z].+)"', html_content).group(1)
+            except: pass
+
         while offset != -1:
-            gallery = DA_CLIENT.get_gallery_folder(re.search(r'https?:..www.deviantart.com.(.+?)($|\/)', devianturl).group(1), offset=offset, limit=24)
+            gallery = DA_CLIENT.get_gallery_folder(re.search(r'https?:..www.deviantart.com.(.+?)($|\/)', devianturl).group(1), folderid=folder_id, offset=offset, limit=24)
             for deviation in gallery['results']:
                 if(get_da_curation(deviationdata=deviation)):
                     curationcounter += 1
             offset += 24
             if gallery['has_more'] == False: offset = -1
-        print('Note: scraps can only be fetched individually.')
+
+        if folder_id == '': print('Note: scraps can only be fetched individually.')
+
     elif re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)\/favourites\/(\d+?)\/([\w-]+?)$', devianturl):
         id = get_collection_id(devianturl)
-        offset = 0
         while offset != -1:
             collection = DA_CLIENT.get_collection(id, re.search(r'https?:..www.deviantart.com\/(.+?)\/', devianturl).group(1), offset=offset, limit=24)
             for deviation in collection['results']:
@@ -237,21 +245,21 @@ def check_da_url(devianturl):
 
 def return_msg(value):
     if value <= 0:
-        print('Failed to download file(s). Press Enter to exit this program.')
+        print('\nFailed to download file(s). Press Enter to exit this program.')
     else:
         if value == 1:
-            print('Finished! Press Enter to exit this program.')
+            print('\nFinished! Press Enter to exit this program.')
         else:
-            print('{} files curated! Press Enter to exit this program.'.format(value))
+            print('\n{} files curated! Press Enter to exit this program.'.format(value))
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.1.2 --- 2021-08-13')
+    print('fpdeviant by prostagma-fp --- version 1.1.3 --- 2021-08-13')
     print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':
         if value.startswith('http'):
-            print('Fetching file...\n')
+            print('Fetching file...')
             return_msg(check_da_url(value))
         else:
             try:

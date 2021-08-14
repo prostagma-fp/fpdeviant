@@ -5,7 +5,7 @@ import os, re
 from html import unescape
 from time import gmtime, strftime
 
-# Monkey patching because library is missing filename parameter and full gallery fetch
+# Monkey patching because library is missing filename parameter
 def download_deviation_with_filename(self, deviationid):
     response = self._req('/deviation/download/{}'.format(deviationid))
     return {
@@ -34,7 +34,7 @@ def delete_folder(uuid):
 
 def setup_client_from_file(dafilename):
     """Creates a DeviantArt API connection from a text file.
-    Must be built as (ID=[client_id]\\nSECRET=[client_secret])"""
+    File must be built as (ID=[client_id]\\nSECRET=[client_secret])"""
 
     # Get client's id and secret
     try:
@@ -61,12 +61,12 @@ def get_da_curation(deviationurl=None, deviationdata=None):
     :param deviationdata: The deviation data from gallery/{folderid} you want to curate from.
     """
 
-    # Aborts if both url and UUID are abscent
+    # Aborts if both url and data are abscent
     if not deviationurl and not deviationdata:
         print('You must pass the deviation\'s url or UUID.')
         return
 
-    # Fetch website and get UUID if deviationuuid is empty
+    # Fetch website and get UUID if deviationdata is empty
     if not deviationdata:
         try: html_content = requests.get(deviationurl).text
         except:
@@ -81,8 +81,6 @@ def get_da_curation(deviationurl=None, deviationdata=None):
             return
     else:
         uuid = deviationdata.deviationid
-    
-    #if not 'html_content' in locals():
 
     # Source
     source_url = deviationurl if deviationurl else deviationdata.url
@@ -204,7 +202,7 @@ def get_collection_id(collectionurl):
 
 def check_da_url(devianturl):
 
-    """Tries to create a curation if the url is a deviation or multiple if the url is a gallery or username link. Scraps can only be fetched individually.
+    """Checks if a link is a single deviation or a group (galleries, favorites or username link) for get_da_curation(). Scraps can only be fetched individually.
 
     :param deviationurl: The deviation link you want to curate from.
     """
@@ -254,7 +252,7 @@ def return_msg(value):
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.1.3 --- 2021-08-13')
+    print('fpdeviant by prostagma-fp --- version 1.1.3.1 --- 2021-08-14')
     print('Supports deviation, favourites and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':

@@ -68,6 +68,8 @@ def get_da_curation(deviationurl=None, deviationdata=None):
 
     # Fetch website and get UUID if deviationdata is empty
     if not deviationdata:
+        # username.deviantart.com/art/example -> deviantart.com/username/art/example
+        deviationurl = re.sub(r'www\.((.+)\.)deviantart\.com', r'www.deviantart.com/\2', re.sub(r'^(https?://)?(www\.)?(\w)', r'https://www.\3', deviationurl))
         try: html_content = requests.get(deviationurl).text
         except:
             print('"' + deviationurl + '" could not be obtained.')
@@ -76,8 +78,12 @@ def get_da_curation(deviationurl=None, deviationdata=None):
         try:
             id_index = html_content.find('DeviantArt://deviation/')+23
             uuid = html_content[id_index:id_index+36]
-        except: 
+        except:
             print('"' + deviationurl + '" is not a valid deviation.')
+            return
+
+        if ('\n' in uuid):
+            print('"' + deviationurl + '" has no valid UUID.')
             return
     else:
         uuid = deviationdata.deviationid

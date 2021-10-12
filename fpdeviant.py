@@ -5,7 +5,7 @@ import os, re
 from html import unescape
 from time import gmtime, strftime
 
-# Monkey patching because library is missing filename parameter
+# Monkey patching because library is missing filename in a def, and mature on another
 def download_deviation_with_filename(self, deviationid):
     response = self._req('/deviation/download/{}'.format(deviationid))
     return {
@@ -13,6 +13,57 @@ def download_deviation_with_filename(self, deviationid):
         'filename' : response['filename']
     }
 deviantart.Api.download_deviation = lambda self, deviationid: download_deviation_with_filename(self, deviationid)
+
+def get_gallery_folder(self, username="", folderid="", mode="popular", offset=0, limit=10):
+
+        """Fetch gallery folder contents
+
+        :param username: The user to query, defaults to current user
+        :param folderid: UUID of the folder to list, if omitted query ALL folders
+        :param mode: Sort results by either newest or popular
+        :param offset: the pagination offset
+        :param limit: the pagination limit
+        """
+
+        if not username and self.standard_grant_type == "authorization_code":
+            response = self._req('/gallery/{}'.format(folderid), {
+                "mode":mode,
+                "offset":offset,
+                "limit":limit
+            })
+        else:
+            if not username:
+                raise DeviantartError("No username defined.")
+            else:
+                response = self._req('/gallery/{}'.format(folderid), {
+                    "username":username,
+                    "mode":mode,
+                    "offset":offset,
+                    "limit":limit,
+                    "mature_content":"true"
+                })
+
+        deviations = []
+
+        for item in response['results']:
+            d = deviantart.deviation.Deviation()
+            d.from_dict(item)
+            deviations.append(d)
+
+        if "name" in response:
+            name = response['name']
+        else:
+            name = None
+
+        return {
+            "results" : deviations,
+            "name" : name,
+            "has_more" : response['has_more'],
+            "next_offset" : response['next_offset']
+        }
+deviantart.Api.get_gallery_folder = lambda self, username, folderid, offset, limit, mode="popular": get_gallery_folder(self, username, folderid, mode, offset, limit)
+
+# End monkey patching
 
 DA_CLIENT = None
 SHORT_PATH = 'Working/da_'
@@ -230,7 +281,7 @@ def check_da_url(devianturl):
             offset += 24
             if gallery['has_more'] == False: offset = -1
 
-        if folder_id == '': print('Note: scraps can only be fetched individually.')
+        if folder_id == '': print('Note: scraps (if any) can only be fetched individually.')
 
     elif re.fullmatch(r'https?:..www.deviantart.com\/([\w-]+?)\/favourites\/(\d+?)\/([\w-]+?)$', devianturl):
         id = get_collection_id(devianturl)
@@ -258,8 +309,8 @@ def return_msg(value):
 
 
 def looping_menu():
-    print('fpdeviant by prostagma-fp --- version 1.1.3.1 --- 2021-08-14')
-    print('Supports deviation, favourites and user URLs')
+    print('fpdeviant by prostagma-fp --- version 1.1.4 --- 2021-10-12')
+    print('Supports deviation, favourites, gallery and user URLs')
     value = input('Enter a filename or URL: ')
     while value != '':
         if value.startswith('http'):
@@ -286,3 +337,4 @@ if __name__ == "__main__":
         looping_menu()
     else:
         print('You must enter a DeviantArt client ID and secret in deviantart.txt first.')
+        

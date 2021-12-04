@@ -1,2 +1,2 @@
 @echo off
-python fpdeviant.py %*
+py fpdeviant.py %*
